@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--
+        Loaded into the Messaging subsystem (alfresco/extension/subsystems/Messaging/default/default/*-context.xml),
+        next to alfrescoCamelContext, whose <contextScan/> registers this RouteBuilder.
+    -->
+    <bean id="event2KafkaFanOutRouteBuilder" class="org.kamranzafar.alfresco.event2.kafka.Event2FanOutRouteBuilder">
+        <property name="sourceEndpoint" value="${repo.event2.producer.endpoint}"/>
+        <property name="activeMqEnabled" value="${repo.event2.route.activemq.enabled}"/>
+        <property name="activeMqEndpoint" value="${repo.event2.route.activemq.endpoint}"/>
+        <property name="kafkaEnabled" value="${repo.event2.route.kafka.enabled}"/>
+        <property name="kafkaEndpoint" value="${repo.event2.route.kafka.endpoint}"/>
+        <property name="kafkaFailOnError" value="${repo.event2.route.kafka.failOnError}"/>
+    </bean>
+</beans>

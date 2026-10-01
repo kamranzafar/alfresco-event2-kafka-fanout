@@ -1,0 +1,14 @@
+alfresco-event2-kafka-fanout
+Copyright 2026 Kamran Zafar
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The AMP distribution bundles the following third-party libraries, each under its own license:
+  - Apache Camel Kafka component (Apache License 2.0)
+  - Apache Kafka clients (Apache License 2.0)
+  - lz4-java (Apache License 2.0)
+  - snappy-java (Apache License 2.0)
+  - zstd-jni (BSD 2-Clause License)
+
+It is built against, but does not include, Alfresco Content Services Community Edition
+(alfresco-repository), which is licensed under the GNU Lesser General Public License v3.

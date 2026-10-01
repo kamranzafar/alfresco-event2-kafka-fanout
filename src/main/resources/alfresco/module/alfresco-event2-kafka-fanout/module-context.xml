@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--
+        Replaces the stock event2MessageProducer (alfresco/messaging-context.xml): same wiring, but it sends to
+        repo.event2.producer.endpoint (the fan-out route by default) and adds the node id header used as the Kafka key.
+        Module contexts load after the core contexts, so this definition wins.
+    -->
+    <bean id="event2MessageProducer" class="org.kamranzafar.alfresco.event2.kafka.KeyedEvent2MessageProducer">
+        <property name="producer" ref="camelProducerTemplate"/>
+        <property name="endpoint" value="${repo.event2.producer.endpoint}"/>
+        <property name="objectMapper" ref="event2ObjectMapper"/>
+    </bean>
+</beans>
