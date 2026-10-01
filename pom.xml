@@ -6,7 +6,7 @@
 
     <groupId>org.kamranzafar.alfresco</groupId>
     <artifactId>alfresco-event2-kafka-fanout</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>Alfresco Event2 Kafka Fan-out</name>
