@@ -107,7 +107,7 @@ USER alfresco
 **JAR:** copy the module jar and the five libraries listed above into `webapps/alfresco/WEB-INF/lib`.
 The AMP's `lib/` folder contains exactly that set.
 
-On startup the log shows `Installing module 'alfresco-event2-kafka-fanout' version 1.0.0`.
+On startup the log shows `Installing module 'alfresco-event2-kafka-fanout' version 1.0.1`.
 
 ### Using the published artifacts
 
@@ -118,7 +118,7 @@ published alongside the jar:
 <dependency>
   <groupId>org.kamranzafar.alfresco</groupId>
   <artifactId>alfresco-event2-kafka-fanout</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <type>amp</type>
 </dependency>
 ```
@@ -126,7 +126,7 @@ published alongside the jar:
 Or download the AMP directly:
 
 ```bash
-curl -O https://repo1.maven.org/maven2/org/kamranzafar/alfresco/alfresco-event2-kafka-fanout/1.0.0/alfresco-event2-kafka-fanout-1.0.0.amp
+curl -O https://repo1.maven.org/maven2/org/kamranzafar/alfresco/alfresco-event2-kafka-fanout/1.0.1/alfresco-event2-kafka-fanout-1.0.1.amp
 ```
 
 ## Configuration
