@@ -139,7 +139,18 @@ only to ActiveMQ, unchanged.
 | `repo.event2.route.activemq.enabled` | `true` | Publish to the stock ActiveMQ topic |
 | `repo.event2.route.activemq.endpoint` | `${repo.event2.topic.endpoint}` | ActiveMQ target (the stock setting) |
 | `repo.event2.route.kafka.enabled` | `false` | Publish to Kafka |
-| `repo.event2.route.kafka.endpoint` | `kafka:alfresco.repo.event2?brokers=localhost:9092&requestRequiredAcks=all&enableIdempotence=true&maxBlockMs=5000&requestTimeoutMs=5000&deliveryTimeoutMs=10000` | Camel Kafka endpoint: topic, brokers, security and producer options |
+| `repo.event2.route.kafka.endpoint` | *(empty)* | Full Camel Kafka endpoint URI. If set, it is used as is and the topic and option properties below are ignored |
+| `repo.event2.route.kafka.topic` | `alfresco.repo.event2` | Kafka topic |
+| `repo.event2.route.kafka.brokers` | `localhost:9092` | Comma-separated `host:port` list |
+| `repo.event2.route.kafka.requestRequiredAcks` | `all` | Producer `acks` |
+| `repo.event2.route.kafka.enableIdempotence` | `true` | Idempotent producer |
+| `repo.event2.route.kafka.maxBlockMs` | `5000` | Producer `max.block.ms` |
+| `repo.event2.route.kafka.requestTimeoutMs` | `5000` | Producer `request.timeout.ms` |
+| `repo.event2.route.kafka.deliveryTimeoutMs` | `10000` | Producer `delivery.timeout.ms` |
+| `repo.event2.route.kafka.clientId`, `.compressionCodec`, `.lingerMs` | *(empty)* | Optional producer settings |
+| `repo.event2.route.kafka.securityProtocol`, `.saslMechanism`, `.saslJaasConfig` | *(empty)* | Optional SASL settings |
+| `repo.event2.route.kafka.sslTruststoreLocation`, `.sslTruststorePassword`, `.sslTruststoreType`, `.sslKeystoreLocation`, `.sslKeystorePassword`, `.sslKeystoreType`, `.sslKeyPassword`, `.sslEndpointAlgorithm` | *(empty)* | Optional SSL settings |
+| `repo.event2.route.kafka.options` | *(empty)* | Any other Camel Kafka endpoint options, appended as they are, e.g. `maxRequestSize=2097152&retries=5` |
 | `repo.event2.route.kafka.failOnError` | `false` | `false`: Kafka failures are logged and not reported to the sender. `true`: they are reported to the sender like ActiveMQ failures. Either way, a Kafka failure never stops delivery to ActiveMQ |
 | `repo.event2.producer.endpoint` | `direct:alfresco.repo.event2.fanout` | Set to `${repo.event2.topic.endpoint}` to bypass the module completely |
 
@@ -149,7 +160,19 @@ only to ActiveMQ, unchanged.
 | Kafka only | also `repo.event2.route.activemq.enabled=false` |
 | Back to stock behaviour without uninstalling | `repo.event2.producer.endpoint=${repo.event2.topic.endpoint}` |
 
-Security goes on the endpoint, for example `&securityProtocol=SASL_SSL&saslMechanism=PLAIN&saslJaasConfig=RAW(...)`.
+Each option property is named after its Camel Kafka endpoint option. Blank ones are left out, so Kafka's own default
+applies. Values with special characters, such as `saslJaasConfig` or passwords, are passed on unchanged: don't wrap
+them in `RAW(...)`. For example:
+
+```properties
+repo.event2.route.kafka.enabled=true
+repo.event2.route.kafka.brokers=kafka1:9093,kafka2:9093
+repo.event2.route.kafka.securityProtocol=SASL_SSL
+repo.event2.route.kafka.saslMechanism=PLAIN
+repo.event2.route.kafka.saslJaasConfig=org.apache.kafka.common.security.plain.PlainLoginModule required username="alfresco" password="secret";
+```
+
+On startup the log shows the endpoint in use, with secrets masked: `Event2 Kafka endpoint: kafka:...`.
 
 Create the Kafka topic with the number of partitions you need before enabling the Kafka target. Each node's events
 stay in order because they all go to one partition, chosen from the node id. Adding partitions later changes that
@@ -157,9 +180,10 @@ mapping, so events for a node that is changing at that moment can be read out of
 
 Settings take effect at startup, or when the Messaging subsystem restarts.
 
-> **Put endpoint URIs in `alfresco-global.properties`, not `JAVA_OPTS`.** The image's `catalina.sh` runs `JAVA_OPTS`
+> **Put endpoint URIs and values with special characters in `alfresco-global.properties`, not `JAVA_OPTS`.** The image's `catalina.sh` runs `JAVA_OPTS`
 > through `eval`, so the `&` and `(` in Kafka and ActiveMQ URIs break startup
-> (`syntax error near unexpected token '('`). Simple values such as `-Drepo.event2.route.kafka.enabled=true` are fine.
+> (`syntax error near unexpected token '('`). Simple values such as `-Drepo.event2.route.kafka.enabled=true` or
+> `-Drepo.event2.route.kafka.brokers=kafka:9092` are fine.
 
 ## Delivery behaviour
 
@@ -195,9 +219,9 @@ How the module was tested, with results and versions: [TESTING.md](TESTING.md).
 mvn test
 ```
 
-There are 18 tests:
+There are 22 tests:
 
-- `Event2FanOutRouteBuilderTest`: every combination of enabled targets, the Kafka key and header handling, failure isolation between the two targets (each still gets the event when the other fails) and error reporting, the bypass mode, and a check that the default Kafka endpoint options are valid.
+- `Event2FanOutRouteBuilderTest`: every combination of enabled targets, the Kafka key and header handling, failure isolation between the two targets (each still gets the event when the other fails) and error reporting, the bypass mode, how the Kafka endpoint is built from the individual properties (precedence of `endpoint`, blank options left out, special characters passed unchanged), and a check that the default Kafka endpoint options are valid.
 - `KeyedEvent2MessageProducerTest`: the key for each resource type, and no header added when sending straight to a broker.
 - `ModuleWiringTest`: loads the module's Spring XML with its default properties.
 

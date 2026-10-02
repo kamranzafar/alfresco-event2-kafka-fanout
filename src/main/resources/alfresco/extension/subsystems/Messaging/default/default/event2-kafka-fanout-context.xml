@@ -12,7 +12,35 @@
         <property name="activeMqEnabled" value="${repo.event2.route.activemq.enabled}"/>
         <property name="activeMqEndpoint" value="${repo.event2.route.activemq.endpoint}"/>
         <property name="kafkaEnabled" value="${repo.event2.route.kafka.enabled}"/>
+        <!-- used as is when set; otherwise built from the topic and options below -->
         <property name="kafkaEndpoint" value="${repo.event2.route.kafka.endpoint}"/>
+        <property name="kafkaTopic" value="${repo.event2.route.kafka.topic}"/>
+        <!-- keys are Camel Kafka endpoint option names; blank values are left out -->
+        <property name="kafkaOptions">
+            <map>
+                <entry key="brokers" value="${repo.event2.route.kafka.brokers}"/>
+                <entry key="clientId" value="${repo.event2.route.kafka.clientId}"/>
+                <entry key="requestRequiredAcks" value="${repo.event2.route.kafka.requestRequiredAcks}"/>
+                <entry key="enableIdempotence" value="${repo.event2.route.kafka.enableIdempotence}"/>
+                <entry key="maxBlockMs" value="${repo.event2.route.kafka.maxBlockMs}"/>
+                <entry key="requestTimeoutMs" value="${repo.event2.route.kafka.requestTimeoutMs}"/>
+                <entry key="deliveryTimeoutMs" value="${repo.event2.route.kafka.deliveryTimeoutMs}"/>
+                <entry key="compressionCodec" value="${repo.event2.route.kafka.compressionCodec}"/>
+                <entry key="lingerMs" value="${repo.event2.route.kafka.lingerMs}"/>
+                <entry key="securityProtocol" value="${repo.event2.route.kafka.securityProtocol}"/>
+                <entry key="saslMechanism" value="${repo.event2.route.kafka.saslMechanism}"/>
+                <entry key="saslJaasConfig" value="${repo.event2.route.kafka.saslJaasConfig}"/>
+                <entry key="sslTruststoreLocation" value="${repo.event2.route.kafka.sslTruststoreLocation}"/>
+                <entry key="sslTruststorePassword" value="${repo.event2.route.kafka.sslTruststorePassword}"/>
+                <entry key="sslTruststoreType" value="${repo.event2.route.kafka.sslTruststoreType}"/>
+                <entry key="sslKeystoreLocation" value="${repo.event2.route.kafka.sslKeystoreLocation}"/>
+                <entry key="sslKeystorePassword" value="${repo.event2.route.kafka.sslKeystorePassword}"/>
+                <entry key="sslKeystoreType" value="${repo.event2.route.kafka.sslKeystoreType}"/>
+                <entry key="sslKeyPassword" value="${repo.event2.route.kafka.sslKeyPassword}"/>
+                <entry key="sslEndpointAlgorithm" value="${repo.event2.route.kafka.sslEndpointAlgorithm}"/>
+            </map>
+        </property>
+        <property name="kafkaExtraOptions" value="${repo.event2.route.kafka.options}"/>
         <property name="kafkaFailOnError" value="${repo.event2.route.kafka.failOnError}"/>
     </bean>
 </beans>

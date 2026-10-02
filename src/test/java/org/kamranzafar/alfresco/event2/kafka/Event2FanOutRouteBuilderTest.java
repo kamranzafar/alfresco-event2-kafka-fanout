@@ -26,8 +26,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -167,16 +169,90 @@ class Event2FanOutRouteBuilderTest {
     }
 
     @Test
+    void endpointPropertyTakesPrecedenceOverIndividualOptions() {
+        Event2FanOutRouteBuilder builder = new Event2FanOutRouteBuilder();
+        builder.setKafkaEndpoint(" kafka:other?brokers=broker:9092 ");
+        builder.setKafkaTopic("alfresco.repo.event2");
+        builder.setKafkaOptions(Map.of("brokers", "localhost:9092"));
+
+        assertEquals("kafka:other?brokers=broker:9092", builder.kafkaEndpointUri());
+    }
+
+    @Test
+    void buildsEndpointFromTopicAndNonBlankOptions() {
+        Event2FanOutRouteBuilder builder = new Event2FanOutRouteBuilder();
+        builder.setKafkaEndpoint("");
+        builder.setKafkaTopic("alfresco.repo.event2");
+        Map<String, String> options = new LinkedHashMap<>();
+        options.put("brokers", "k1:9092,k2:9092");
+        options.put("clientId", " ");
+        options.put("securityProtocol", null);
+        options.put("maxBlockMs", "5000");
+        builder.setKafkaOptions(options);
+        builder.setKafkaExtraOptions("&retries=5");
+
+        assertEquals("kafka:alfresco.repo.event2?brokers=k1:9092,k2:9092&maxBlockMs=5000&retries=5", builder.kafkaEndpointUri());
+    }
+
+    @Test
+    void failsWithoutEndpointOrTopic() {
+        Event2FanOutRouteBuilder builder = new Event2FanOutRouteBuilder();
+        builder.setKafkaEndpoint("");
+        builder.setKafkaTopic("");
+
+        assertThrows(IllegalStateException.class, builder::kafkaEndpointUri);
+    }
+
+    @Test
+    void passesOptionValuesWithSpecialCharactersUnchanged() {
+        String jaas = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"user\" password=\"p&s=s+w%d\";";
+        String password = "se(cr)et&1";
+        Event2FanOutRouteBuilder builder = new Event2FanOutRouteBuilder();
+        builder.setKafkaTopic("alfresco.repo.event2");
+        Map<String, String> options = new LinkedHashMap<>();
+        options.put("brokers", "localhost:9092");
+        options.put("securityProtocol", "SASL_SSL");
+        options.put("saslJaasConfig", jaas);
+        options.put("sslTruststorePassword", password);
+        builder.setKafkaOptions(options);
+        camelContext = new DefaultCamelContext();
+        camelContext.start();
+
+        KafkaEndpoint endpoint = assertInstanceOf(KafkaEndpoint.class, camelContext.getEndpoint(builder.kafkaEndpointUri()));
+
+        assertEquals(jaas, endpoint.getConfiguration().getSaslJaasConfig());
+        assertEquals(password, endpoint.getConfiguration().getSslTruststorePassword());
+        assertEquals("SASL_SSL", endpoint.getConfiguration().getSecurityProtocol());
+    }
+
+    @Test
     void defaultKafkaEndpointOptionsAreValid() throws Exception {
         Properties defaults = new Properties();
         try (InputStream in = getClass().getClassLoader().getResourceAsStream("alfresco/module/alfresco-event2-kafka-fanout/alfresco-global.properties")) {
             defaults.load(in);
         }
+        String prefix = "repo.event2.route.kafka.";
+        Map<String, String> options = new LinkedHashMap<>();
+        for (String name : defaults.stringPropertyNames()) {
+            String option = name.substring(prefix.length());
+            if (name.startsWith(prefix) && !Set.of("enabled", "endpoint", "topic", "options", "failOnError").contains(option)) {
+                options.put(option, defaults.getProperty(name));
+            }
+        }
+        Event2FanOutRouteBuilder builder = new Event2FanOutRouteBuilder();
+        builder.setKafkaEndpoint(defaults.getProperty(prefix + "endpoint"));
+        builder.setKafkaTopic(defaults.getProperty(prefix + "topic"));
+        builder.setKafkaOptions(options);
+        builder.setKafkaExtraOptions(defaults.getProperty(prefix + "options"));
         camelContext = new DefaultCamelContext();
         camelContext.start();
 
         // rejects unknown or invalid options; does not connect to a broker
-        assertInstanceOf(KafkaEndpoint.class, camelContext.getEndpoint(defaults.getProperty("repo.event2.route.kafka.endpoint")));
+        KafkaEndpoint endpoint = assertInstanceOf(KafkaEndpoint.class, camelContext.getEndpoint(builder.kafkaEndpointUri()));
+        assertEquals("alfresco.repo.event2", endpoint.getConfiguration().getTopic());
+        assertEquals("localhost:9092", endpoint.getConfiguration().getBrokers());
+        assertEquals("all", endpoint.getConfiguration().getRequestRequiredAcks());
+        assertEquals(10000, endpoint.getConfiguration().getDeliveryTimeoutMs());
     }
 
     private void start(boolean activeMqEnabled, boolean kafkaEnabled, boolean kafkaFailOnError) {

@@ -52,6 +52,8 @@ class ModuleWiringTest {
             assertEquals("amqp:topic:alfresco.repo.event2", ReflectionTestUtils.getField(builder, "activeMqEndpoint"));
             assertEquals(false, ReflectionTestUtils.getField(builder, "kafkaEnabled"));
             assertEquals(false, ReflectionTestUtils.getField(builder, "kafkaFailOnError"));
+            assertEquals("kafka:alfresco.repo.event2?brokers=localhost:9092&requestRequiredAcks=all&enableIdempotence=true&maxBlockMs=5000&requestTimeoutMs=5000&deliveryTimeoutMs=10000",
+                    builder.kafkaEndpointUri());
         }
     }
 
